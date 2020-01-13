@@ -56,4 +56,34 @@ describe('components/Search', () => {
 
     expect(wrapper.emitted().search).toBeFalsy()
   })
+
+  describe('Error handling', () => {
+    it('Should display an error if the API sends back an Error property', async () => {
+      const response = { status: 200, data: { Response: 'False', Error: 'Too many results' } }
+
+      axios.get.mockImplementation(async () => response)
+      input.trigger('keyup.enter')
+
+      await Vue.nextTick()
+
+      const error = wrapper.find('span')
+      expect(error.text()).toBe(response.data.Error)
+    })
+
+    it('Should make the error disappear if a new search is successful', async () => {
+      wrapper.vm.error = 'Too many results.'
+
+      let error = wrapper.find('span')
+      expect(error.exists()).toBe(true)
+
+      const response = { status: 200, data: { Response: 'True', Search: ['foobar', 'hello'] } }
+      axios.get.mockImplementation(async () => response)
+      input.trigger('keyup.enter')
+
+      await Vue.nextTick()
+
+      error = wrapper.find('span')
+      expect(error.exists()).toBe(false)
+    })
+  })
 })
